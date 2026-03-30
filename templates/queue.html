@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SmartQ — Your Position</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ink: #0f0e0d;
+    --paper: #f5f0e8;
+    --cream: #ede8dc;
+    --amber: #d4660a;
+    --amber-light: #f0934a;
+    --amber-pale: #fde8d4;
+    --teal: #1a6b6b;
+    --teal-light: #2a9494;
+    --green: #1f7a4a;
+    --green-pale: #d4f0e2;
+    --red: #c0392b;
+    --muted: #7a7060;
+    --border: #c8c0b0;
+    --white: #ffffff;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── Top Bar ── */
+  .topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.2rem 2rem;
+    border-bottom: 1px solid var(--border);
+    background: var(--white);
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.85rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--amber);
+    text-decoration: none;
+  }
+  .logo-dot {
+    width: 7px; height: 7px;
+    background: var(--amber);
+    border-radius: 50%;
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.5); opacity: 0.6; }
+  }
+  .token-badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 1.2rem;
+    font-weight: 500;
+    background: var(--ink);
+    color: var(--amber-light);
+    padding: 0.3rem 0.9rem;
+    border-radius: 6px;
+    letter-spacing: 0.1em;
+  }
+
+  /* ── Main ── */
+  .main {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 0;
+    max-width: 1000px;
+    margin: 0 auto;
+    width: 100%;
+    padding: 2.5rem 1.5rem;
+    align-items: start;
+    gap: 2rem;
+  }
+
+  /* ── Position Card ── */
+  .position-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  .position-header {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 2rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .position-header::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 200px; height: 200px;
+    border-radius: 50%;
+    border: 35px solid rgba(212,102,10,0.12);
+  }
+
+  .position-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: rgba(245,240,232,0.5);
+    margin-bottom: 0.8rem;
+  }
+  .position-number {
+    font-family: 'DM Serif Display', serif;
+    font-size: 6rem;
+    line-height: 1;
+    color: var(--amber-light);
+    position: relative;
+    z-index: 1;
+  }
+  .position-sub {
+    font-size: 0.9rem;
+    color: rgba(245,240,232,0.6);
+    margin-top: 0.4rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Status badge */
+  .status-row {
+    display: flex;
+    justify-content: center;
+    margin-top: 1.2rem;
+    position: relative;
+    z-index: 1;
+  }
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.35rem 0.9rem;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+  }
+  .status-pill.waiting { background: rgba(212,102,10,0.25); color: var(--amber-light); }
+  .status-pill.served { background: rgba(31,122,74,0.25); color: #4ade80; }
+  .status-pill.cancelled { background: rgba(192,57,43,0.25); color: #f87171; }
+  .status-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .status-pill.waiting .status-dot { animation: pulse 1.5s ease-in-out infinite; }
+
+  /* Wait info */
+  .wait-body {
+    padding: 2rem;
+  }
+  .wait-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1.6rem;
+  }
+  .wait-cell {
+    background: var(--paper);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.2rem;
+    text-align: center;
+  }
+  .wait-cell .num {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2rem;
+    color: var(--ink);
+    display: block;
+  }
+  .wait-cell .lbl {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin-top: 0.2rem;
+    display: block;
+  }
+
+  /* Progress bar */
+  .progress-section { margin-bottom: 1.6rem; }
+  .progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin-bottom: 0.5rem;
+  }
+  .progress-bar {
+    height: 8px;
+    background: var(--cream);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--amber), var(--amber-light));
+    border-radius: 4px;
+    transition: width 1s ease;
+  }
+
+  /* Detail list */
+  .detail-list {
+    border-top: 1px solid var(--border);
+    padding-top: 1.4rem;
+  }
+  .detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.55rem 0;
+    border-bottom: 1px dashed var(--border);
+    font-size: 0.88rem;
+  }
+  .detail-row:last-child { border-bottom: none; }
+  .detail-row .key { color: var(--muted); }
+  .detail-row .val { font-weight: 500; }
+  .service-tag {
+    background: var(--amber-pale);
+    color: var(--amber);
+    font-size: 0.75rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 20px;
+    font-weight: 500;
+  }
+
+  /* Action buttons */
+  .actions {
+    display: flex;
+    gap: 0.8rem;
+    margin-top: 1.4rem;
+  }
+  .btn {
+    flex: 1;
+    padding: 0.8rem;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.88rem;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+  }
+  .btn-home { background: var(--paper); border: 1.5px solid var(--border); color: var(--ink); }
+  .btn-home:hover { background: var(--cream); }
+  .btn-leave { background: #fff1f0; border: 1.5px solid #fecaca; color: var(--red); }
+  .btn-leave:hover { background: #fee2e2; }
+
+  /* ── Right Sidebar ── */
+  .sidebar {}
+
+  .info-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.6rem;
+    margin-bottom: 1.2rem;
+  }
+  .info-card h3 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .info-card h3 .icon {
+    font-size: 1.1rem;
+  }
+
+  .timeline {
+    position: relative;
+    padding-left: 1.6rem;
+  }
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 0.35rem;
+    top: 0.4rem;
+    bottom: 0;
+    width: 1px;
+    background: var(--border);
+  }
+  .tl-item {
+    position: relative;
+    margin-bottom: 1.2rem;
+    font-size: 0.85rem;
+  }
+  .tl-item::before {
+    content: '';
+    position: absolute;
+    left: -1.25rem;
+    top: 0.35rem;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--border);
+    border: 2px solid var(--paper);
+  }
+  .tl-item.done::before { background: var(--green); }
+  .tl-item.active::before { background: var(--amber); animation: pulse 1.5s ease-in-out infinite; }
+  .tl-item .tl-title { font-weight: 500; color: var(--ink); }
+  .tl-item .tl-sub { color: var(--muted); margin-top: 0.15rem; }
+  .tl-item.pending .tl-title { color: var(--muted); }
+
+  /* Refresh notice */
+  .refresh-notice {
+    background: var(--cream);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1rem 1.2rem;
+    font-size: 0.82rem;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+  .refresh-notice .dot { color: var(--teal); font-size: 1rem; }
+
+  /* Countdown */
+  .countdown-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-top: 0.3rem;
+    text-align: center;
+  }
+
+  @media (max-width: 700px) {
+    .main { grid-template-columns: 1fr; padding: 1.5rem 1rem; }
+    .position-number { font-size: 4rem; }
+    .wait-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="/" class="logo">
+    <div class="logo-dot"></div>
+    SmartQ
+  </a>
+  <span class="token-badge">{{ person.token }}</span>
+</div>
+
+<div class="main">
+  <!-- LEFT: Position Card -->
+  <div class="position-card">
+    <div class="position-header">
+      <div class="position-label">Your Queue Position</div>
+      {% if person.status == 'waiting' %}
+        <div class="position-number" id="posNum">{{ person.position }}</div>
+        <div class="position-sub">people ahead of you</div>
+      {% elif person.status == 'served' %}
+        <div class="position-number">✓</div>
+        <div class="position-sub">Service completed!</div>
+      {% else %}
+        <div class="position-number">—</div>
+        <div class="position-sub">Queue cancelled</div>
+      {% endif %}
+      <div class="status-row">
+        <span class="status-pill {{ person.status }}">
+          <span class="status-dot"></span>
+          {% if person.status == 'waiting' %}Waiting
+          {% elif person.status == 'served' %}Served
+          {% else %}Cancelled{% endif %}
+        </span>
+      </div>
+    </div>
+
+    <div class="wait-body">
+      {% if person.status == 'waiting' %}
+      <div class="wait-grid">
+        <div class="wait-cell">
+          <span class="num" id="waitMin">{{ wait_minutes }}</span>
+          <span class="lbl">Est. Minutes</span>
+        </div>
+        <div class="wait-cell">
+          <span class="num">{{ avg_service_time }}m</span>
+          <span class="lbl">Per Person</span>
+        </div>
+      </div>
+
+      <!-- Progress bar: inverse (lower position = more complete) -->
+      <div class="progress-section">
+        <div class="progress-label">
+          <span>Queue Progress</span>
+          <span id="progressPct">–</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+        </div>
+      </div>
+      {% endif %}
+
+      <div class="detail-list">
+        <div class="detail-row">
+          <span class="key">Name</span>
+          <span class="val">{{ person.name }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="key">Service</span>
+          <span class="val"><span class="service-tag">{{ person.service }}</span></span>
+        </div>
+        <div class="detail-row">
+          <span class="key">Joined at</span>
+          <span class="val">{{ joined_time }}</span>
+        </div>
+        {% if person.phone %}
+        <div class="detail-row">
+          <span class="key">Phone</span>
+          <span class="val">{{ person.phone }}</span>
+        </div>
+        {% endif %}
+      </div>
+
+      <div class="actions">
+        <a href="/" class="btn btn-home">← Home</a>
+        {% if person.status == 'waiting' %}
+        <form action="/leave/{{ person.token }}" method="POST" style="flex:1;" onsubmit="return confirm('Leave the queue?')">
+          <button type="submit" class="btn btn-leave" style="width:100%">Leave Queue</button>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: Sidebar -->
+  <div class="sidebar">
+    <div class="info-card">
+      <h3><span class="icon">🗂️</span> Your Journey</h3>
+      <div class="timeline">
+        <div class="tl-item done">
+          <div class="tl-title">Joined Queue</div>
+          <div class="tl-sub">{{ joined_time }}</div>
+        </div>
+        <div class="tl-item {% if person.position and person.position <= 3 %}active{% elif person.status == 'served' %}done{% else %}pending{% endif %}">
+          <div class="tl-title">Almost Your Turn</div>
+          <div class="tl-sub">Position ≤ 3</div>
+        </div>
+        <div class="tl-item {% if person.status == 'served' %}done{% else %}pending{% endif %}">
+          <div class="tl-title">Being Served</div>
+          <div class="tl-sub">At the counter</div>
+        </div>
+        <div class="tl-item {% if person.status == 'served' %}done{% else %}pending{% endif %}">
+          <div class="tl-title">Done ✓</div>
+          <div class="tl-sub">Service complete</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="info-card">
+      <h3><span class="icon">💡</span> Tips</h3>
+      <ul style="list-style:none; font-size:0.85rem; color:var(--muted); line-height:1.8;">
+        <li>📍 Stay nearby when position &lt; 5</li>
+        <li>🔄 Page refreshes automatically</li>
+        <li>📋 Show your token <strong style="color:var(--ink)">{{ person.token }}</strong> at counter</li>
+        <li>📞 Staff will call your name too</li>
+      </ul>
+    </div>
+
+    <div class="refresh-notice">
+      <span class="dot">⬤</span>
+      <span>Live — refreshing every <strong id="countdownTimer">30</strong>s</span>
+    </div>
+  </div>
+</div>
+
+<script>
+  const token = "{{ person.token }}";
+  let countdown = 30;
+
+  // Progress bar
+  function updateProgress(pos) {
+    const maxPos = Math.max(pos, 10);
+    const pct = Math.max(0, Math.round((1 - (pos - 1) / maxPos) * 100));
+    document.getElementById('progressFill').style.width = pct + '%';
+    const el = document.getElementById('progressPct');
+    if (el) el.textContent = pct + '%';
+  }
+
+  {% if person.status == 'waiting' %}
+  updateProgress({{ person.position }});
+
+  // Auto-refresh status
+  async function refreshStatus() {
+    try {
+      const res = await fetch('/status/' + token);
+      const data = await res.json();
+      if (data.position !== undefined) {
+        document.getElementById('posNum').textContent = data.position;
+        document.getElementById('waitMin').textContent = data.wait_minutes;
+        updateProgress(data.position);
+      }
+      if (data.status !== 'waiting') {
+        location.reload();
+      }
+    } catch(e) {}
+    countdown = 30;
+  }
+
+  setInterval(() => {
+    countdown--;
+    const el = document.getElementById('countdownTimer');
+    if (el) el.textContent = countdown;
+    if (countdown <= 0) refreshStatus();
+  }, 1000);
+  {% endif %}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SmartQ — Admin Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ink: #0f0e0d;
+    --paper: #f5f0e8;
+    --cream: #ede8dc;
+    --amber: #d4660a;
+    --amber-light: #f0934a;
+    --amber-pale: #fde8d4;
+    --teal: #1a6b6b;
+    --teal-pale: #d4eeee;
+    --green: #1f7a4a;
+    --green-pale: #d4f0e2;
+    --red: #c0392b;
+    --red-pale: #fee2e2;
+    --muted: #7a7060;
+    --border: #c8c0b0;
+    --white: #ffffff;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    min-height: 100vh;
+  }
+
+  /* ── Sidebar ── */
+  .layout { display: flex; min-height: 100vh; }
+
+  .sidebar {
+    width: 220px;
+    background: var(--ink);
+    color: var(--paper);
+    display: flex;
+    flex-direction: column;
+    padding: 1.8rem 1.2rem;
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    z-index: 100;
+  }
+
+  .sidebar-logo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.82rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--amber-light);
+    margin-bottom: 2rem;
+  }
+  .logo-dot {
+    width: 7px; height: 7px;
+    background: var(--amber);
+    border-radius: 50%;
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.5); opacity: 0.6; }
+  }
+
+  .sidebar-section {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: rgba(245,240,232,0.3);
+    margin: 1.2rem 0 0.6rem;
+    padding: 0 0.4rem;
+  }
+
+  .nav-link {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.6rem 0.8rem;
+    border-radius: 7px;
+    color: rgba(245,240,232,0.65);
+    text-decoration: none;
+    font-size: 0.88rem;
+    margin-bottom: 0.2rem;
+    transition: all 0.15s;
+  }
+  .nav-link:hover, .nav-link.active {
+    background: rgba(212,102,10,0.2);
+    color: var(--amber-light);
+  }
+  .nav-link .icon { font-size: 1rem; }
+
+  .sidebar-bottom {
+    margin-top: auto;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255,255,255,0.08);
+  }
+
+  /* ── Main Content ── */
+  .content {
+    margin-left: 220px;
+    flex: 1;
+    padding: 2rem;
+  }
+
+  .page-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 1.8rem;
+  }
+  .page-header h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.9rem;
+  }
+  .page-header .timestamp {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.78rem;
+    color: var(--muted);
+  }
+
+  /* ── Stats Row ── */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+  .stat-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.3rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    right: -20px; bottom: -20px;
+    width: 80px; height: 80px;
+    border-radius: 50%;
+    background: var(--paper);
+  }
+  .stat-card .sc-icon {
+    font-size: 1.4rem;
+    margin-bottom: 0.8rem;
+    display: block;
+  }
+  .stat-card .sc-num {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2.2rem;
+    display: block;
+    line-height: 1;
+  }
+  .stat-card .sc-label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin-top: 0.3rem;
+    display: block;
+  }
+  .stat-card.amber .sc-num { color: var(--amber); }
+  .stat-card.teal .sc-num { color: var(--teal); }
+  .stat-card.green .sc-num { color: var(--green); }
+  .stat-card.ink .sc-num { color: var(--ink); }
+
+  /* ── Tables ── */
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.9rem;
+  }
+  .section-header h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.3rem;
+  }
+  .count-pill {
+    background: var(--ink);
+    color: var(--amber-light);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.78rem;
+    padding: 0.25rem 0.65rem;
+    border-radius: 20px;
+  }
+
+  .table-wrap {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 2rem;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  thead th {
+    background: var(--paper);
+    padding: 0.8rem 1.2rem;
+    text-align: left;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 500;
+    border-bottom: 1px solid var(--border);
+  }
+  tbody tr {
+    border-bottom: 1px solid var(--cream);
+    transition: background 0.15s;
+  }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--paper); }
+  tbody td {
+    padding: 1rem 1.2rem;
+    font-size: 0.9rem;
+    vertical-align: middle;
+  }
+
+  .pos-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px; height: 28px;
+    background: var(--ink);
+    color: var(--amber-light);
+    border-radius: 50%;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.78rem;
+    font-weight: 500;
+  }
+  .pos-badge.first { background: var(--amber); color: white; }
+
+  .token-mono {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.9rem;
+    letter-spacing: 0.08em;
+    background: var(--paper);
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+  }
+
+  .service-chip {
+    background: var(--amber-pale);
+    color: var(--amber);
+    font-size: 0.72rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 20px;
+    font-weight: 500;
+  }
+
+  .wait-text {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.85rem;
+    color: var(--ink);
+  }
+  .wait-text.long { color: var(--red); }
+  .wait-text.short { color: var(--green); }
+
+  .btn-serve {
+    padding: 0.45rem 0.9rem;
+    background: var(--teal);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s;
+    margin-right: 0.4rem;
+  }
+  .btn-serve:hover { background: var(--teal-light); }
+
+  .btn-remove {
+    padding: 0.45rem 0.75rem;
+    background: var(--red-pale);
+    color: var(--red);
+    border: 1px solid #fecaca;
+    border-radius: 6px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .btn-remove:hover { background: #fee2e2; }
+
+  .empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--muted);
+  }
+  .empty-state .big { font-size: 2rem; margin-bottom: 0.5rem; }
+  .empty-state p { font-size: 0.88rem; }
+
+  /* ── Settings ── */
+  .settings-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.6rem;
+    margin-bottom: 2rem;
+  }
+  .settings-card h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.2rem;
+    margin-bottom: 1.2rem;
+  }
+  .settings-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  .settings-row label {
+    font-size: 0.85rem;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+  .settings-row input[type=range] {
+    flex: 1;
+    accent-color: var(--amber);
+  }
+  .settings-row .range-val {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.9rem;
+    min-width: 40px;
+    color: var(--amber);
+  }
+  .btn-save {
+    padding: 0.55rem 1.2rem;
+    background: var(--ink);
+    color: var(--paper);
+    border: none;
+    border-radius: 7px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .btn-save:hover { background: var(--amber); }
+
+  /* Served table specifics */
+  .served-chip {
+    background: var(--green-pale);
+    color: var(--green);
+    font-size: 0.72rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 20px;
+    font-weight: 500;
+  }
+
+  @media (max-width: 900px) {
+    .sidebar { width: 60px; padding: 1.2rem 0.6rem; }
+    .sidebar-logo span, .sidebar-section, .nav-link span:not(.icon), .sidebar-bottom { display: none; }
+    .content { margin-left: 60px; }
+    .stats-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-dot"></div>
+      <span>SmartQ</span>
+    </div>
+
+    <div class="sidebar-section">Menu</div>
+    <a href="/admin" class="nav-link active">
+      <span class="icon">📋</span>
+      <span>Dashboard</span>
+    </a>
+    <a href="/" class="nav-link">
+      <span class="icon">🏠</span>
+      <span>User View</span>
+    </a>
+
+    <div class="sidebar-bottom">
+      <div style="font-size:0.75rem; color:rgba(245,240,232,0.3); padding:0 0.4rem;">
+        Admin Panel v1.0
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="content">
+    <div class="page-header">
+      <h1>Queue Dashboard</h1>
+      <span class="timestamp" id="clock"></span>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid">
+      <div class="stat-card amber">
+        <span class="sc-icon">⏳</span>
+        <span class="sc-num">{{ stats.total_waiting }}</span>
+        <span class="sc-label">Currently Waiting</span>
+      </div>
+      <div class="stat-card green">
+        <span class="sc-icon">✅</span>
+        <span class="sc-num">{{ stats.total_served_today }}</span>
+        <span class="sc-label">Served Today</span>
+      </div>
+      <div class="stat-card teal">
+        <span class="sc-icon">⏱️</span>
+        <span class="sc-num">{{ stats.avg_service_time }}m</span>
+        <span class="sc-label">Avg Service Time</span>
+      </div>
+      <div class="stat-card ink">
+        <span class="sc-icon">📊</span>
+        <span class="sc-num">{{ avg_time }}m</span>
+        <span class="sc-label">Time per Person</span>
+      </div>
+    </div>
+
+    <!-- Settings -->
+    <div class="settings-card">
+      <h2>⚙️ Settings</h2>
+      <form action="/admin/settings" method="POST">
+        <div class="settings-row">
+          <label>Avg service time per person:</label>
+          <input type="range" name="avg_service_time" min="2" max="30" value="{{ avg_time }}"
+                 oninput="this.nextElementSibling.textContent=this.value+'m'">
+          <span class="range-val">{{ avg_time }}m</span>
+          <button type="submit" class="btn-save">Save</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Active Queue -->
+    <div class="section-header">
+      <h2>🟠 Active Queue</h2>
+      <span class="count-pill">{{ waiting | length }} waiting</span>
+    </div>
+    <div class="table-wrap">
+      {% if waiting %}
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Token</th>
+            <th>Name</th>
+            <th>Service</th>
+            <th>Joined</th>
+            <th>Est. Wait</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in waiting %}
+          <tr>
+            <td>
+              <span class="pos-badge {% if p.position == 1 %}first{% endif %}">
+                {{ p.position }}
+              </span>
+            </td>
+            <td><span class="token-mono">{{ p.token }}</span></td>
+            <td><strong>{{ p.name }}</strong></td>
+            <td><span class="service-chip">{{ p.service }}</span></td>
+            <td>{{ p.joined_time }}</td>
+            <td>
+              <span class="wait-text {% if p.wait_minutes >= 20 %}long{% elif p.wait_minutes <= 5 %}short{% endif %}">
+                {{ p.wait_minutes }}m
+              </span>
+            </td>
+            <td>
+              <form action="/admin/serve/{{ p.id }}" method="POST" style="display:inline">
+                <button type="submit" class="btn-serve">✓ Serve</button>
+              </form>
+              <form action="/admin/remove/{{ p.id }}" method="POST" style="display:inline"
+                    onsubmit="return confirm('Remove {{ p.name }}?')">
+                <button type="submit" class="btn-remove">✕</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div class="empty-state">
+        <div class="big">🎉</div>
+        <p>Queue is empty — all clear!</p>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Served Today -->
+    <div class="section-header">
+      <h2>✅ Served Today</h2>
+      <span class="count-pill">{{ served_today | length }}</span>
+    </div>
+    <div class="table-wrap">
+      {% if served_today %}
+      <table>
+        <thead>
+          <tr>
+            <th>Token</th>
+            <th>Name</th>
+            <th>Service</th>
+            <th>Joined</th>
+            <th>Served At</th>
+            <th>Duration</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in served_today %}
+          <tr>
+            <td><span class="token-mono">{{ p.token }}</span></td>
+            <td>{{ p.name }}</td>
+            <td><span class="service-chip">{{ p.service }}</span></td>
+            <td>{{ p.joined_time }}</td>
+            <td>{{ p.served_time }}</td>
+            <td>
+              <span class="wait-text">{{ p.duration }}m</span>
+            </td>
+            <td><span class="served-chip">Served</span></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div class="empty-state">
+        <div class="big">📭</div>
+        <p>No one served yet today</p>
+      </div>
+      {% endif %}
+    </div>
+
+  </main>
+</div>
+
+<script>
+  // Live clock
+  function updateClock() {
+    const now = new Date();
+    document.getElementById('clock').textContent = now.toLocaleTimeString('en-IN', {
+      hour: '2-digit', minute: '2-digit', second: '2-digit'
+    });
+  }
+  updateClock();
+  setInterval(updateClock, 1000);
+
+  // Auto-refresh page every 30s
+  setTimeout(() => location.reload(), 30000);
+</script>
+
+</body>
+</html>
